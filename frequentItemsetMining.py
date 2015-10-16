@@ -1,4 +1,37 @@
 MINSUP=0.144
+DIGREE=4
+MAX_LEAF=6
+class Node():
+	def __init__(self,level):
+		self.isleaf=True
+		self.level=level
+		self.children=[None]*DIGREE
+		self.data=[]
+	def add(self,t):
+		if not self.isleaf:
+			mod=t[self.level]%DIGREE
+			if not self.children[mod]:
+				self.children[mod]=Node(self.level+1)
+			self.children[mod].add(t)
+		else:
+			if len(self.data)!=MAX_LEAF:
+				self.data.append(t)
+				self.data.sort()
+			else:
+				self.data.append(t)
+				self.isleaf=False
+				print(self.isleaf,self.level,self.children,self.data,t)
+				for t in self.data:
+					mod=t[self.level]%DIGREE
+					if not self.children[mod]:
+						self.children[mod]=Node(self.level+1)
+					self.children[mod].add(t)
+				self.data=[]
+
+class Tree():
+	def __init__(self):
+		self.head=Node()
+
 class FreItemMining():
 	def __init__(self):
 		self.item_count=None
@@ -50,12 +83,18 @@ class FreItemMining():
 		return candi
 	def prune(self):
 		pass
+	def support(self,candi):
+		print(candi)
+		tree=Node(0)
+		for c in candi:
+			tree.add(c)
 	def apriori(self):
 		frequent=self.get_frequent_1()
 		#print(frequent)
 		while frequent:
 			candidate=self.get_candidate(frequent)
-			print(candidate)
+			self.support(candidate)
+			break
 if __name__=='__main__':
 	test=FreItemMining()
 	res=test.apriori()
