@@ -1,4 +1,3 @@
-import copy
 MINSUP=0.144
 DIGREE=4
 MAX_LEAF=6
@@ -10,10 +9,7 @@ class Node():
 		self.data=[]
 	def add(self,t):
 		if not self.isleaf:
-			mod=t[self.level]%DIGREE
-			if not self.children[mod]:
-				self.children[mod]=Node(self.level+1)
-			self.children[mod].add(t)
+			self.add_to_children(t)
 		else:
 			if len(self.data)!=MAX_LEAF:
 				self.data.append(t)
@@ -23,11 +19,13 @@ class Node():
 				self.isleaf=False
 				#print(self.isleaf,self.level,self.children,self.data,t)
 				for t in self.data:
-					mod=t[self.level]%DIGREE
-					if not self.children[mod]:
-						self.children[mod]=Node(self.level+1)
-					self.children[mod].add(t)
+					self.add_to_children(t)
 				self.data=[]
+	def add_to_children(self,t):
+		mod=t[self.level]%DIGREE
+		if not self.children[mod]:
+			self.children[mod]=Node(self.level+1)
+		self.children[mod].add(t)
 	def p(self):
 		#print(self.isleaf,self.level,self.data)
 		for c in self.children:
@@ -38,16 +36,21 @@ class Node():
 		result=[]
 		if self.isleaf:
 			for data in self.data:
+				flag_after=0
 				if data[:len(part)]==part:
-					flag=1
+					flag_after=1
+					flag_all_in=1
 					for item in data[len(part):]:
 						if not item in t:
-							flag=0
-					if flag:
+							flag_all_in=0
+					if flag_all_in:
 						result.append(data)
+				elif flag_after:
+					break
 		else:
 			for index in range(len(t)+len(part)-width+1):
-				temp=copy.deepcopy(part)
+				#temp=copy.deepcopy(part)
+				temp=part[:]
 				#print(index,t,part)
 				temp.append(t[index])
 				mod=t[index]%DIGREE
@@ -97,10 +100,12 @@ class FreItemMining():
 			for second in range(first+1,len(freq)):
 				if freq[first][0:length]==freq[second][0:length]:
 					new=freq[first][0:length]
-					if freq[first][length]<freq[second][length]:
-						new.extend([freq[first][length],freq[second][length]])
+					f=freq[first][length]
+					s=freq[second][length]
+					if f<s:
+						new.extend([f,s])
 					else:
-						new.extend([freq[second][length],freq[first][length]])
+						new.extend([s,f])
 					candi.append(new)
 				else:
 					break
@@ -108,6 +113,8 @@ class FreItemMining():
 	def prune(self):
 		pass
 	def support(self,candi):
+		if not candi:
+			return
 		#print(candi)
 		tree=Node(0)
 		for c in candi:
