@@ -1,3 +1,4 @@
+import copy
 MINSUP=0.144
 DIGREE=4
 MAX_LEAF=6
@@ -27,36 +28,33 @@ class Node():
 						self.children[mod]=Node(self.level+1)
 					self.children[mod].add(t)
 				self.data=[]
+	def p(self):
+		#print(self.isleaf,self.level,self.data)
+		for c in self.children:
+			if c:
+				c.p()
+
 	def query(self,t,width,part=[]):
 		result=[]
 		if self.isleaf:
 			for data in self.data:
-#				print(part,t,data)
-#				flag=1
-#				if data[:self.level]==part:
-#					for item in data[self.level:]:
-#						if item not in t:
-#							flag=0
-#					if flag:
-#						result.append(data)
-				flag=1
-				for item in data:
-					if item not in t:
-						flag=0
-				if flag:
-					result.append(data)
+				if data[:len(part)]==part:
+					flag=1
+					for item in data[len(part):]:
+						if not item in t:
+							flag=0
+					if flag:
+						result.append(data)
 		else:
-			for index in range(len(t)-width+1):
+			for index in range(len(t)+len(part)-width+1):
+				temp=copy.deepcopy(part)
+				#print(index,t,part)
+				temp.append(t[index])
 				mod=t[index]%DIGREE
 				if self.children[mod]:
-#					temp=part
-#					temp.append(t[0])
-#					result.extend(self.children[mod].query(t[1:],width,temp))
-					result.extend(self.children[mod].query(t,width,part))
+					#print(t[index+1:],width,temp)
+					result.extend(self.children[mod].query(t[index+1:],width,temp))
 		return result
-class Tree():
-	def __init__(self):
-		self.head=Node()
 
 class FreItemMining():
 	def __init__(self):
@@ -66,7 +64,7 @@ class FreItemMining():
 		self.get_trans()
 	def get_trans(self):
 		with open('assignment2-data.txt','r') as f:
-			self.items=[int(x) for x in f.readline().split()]
+			self.items=[int(x)-1 for x in f.readline().split()]
 			self.item_count=len(self.items)
 			for line in f:
 				self.trans_count+=1
@@ -110,24 +108,34 @@ class FreItemMining():
 	def prune(self):
 		pass
 	def support(self,candi):
-		print(candi)
+		#print(candi)
 		tree=Node(0)
 		for c in candi:
 			tree.add(c)
+		tree.p()
 		support=[0]*len(candi)
 		for t in self.trans:
-			for c in tree.query(t,len(candi[0])):
-				#print(c)
-				support[candi.index(c)]+=1
-		print(support)
+			if len(t)>=len(candi[0]):
+				res=tree.query(t,len(candi[0]))
+				#print('----',t,res)
+				for c in res:
+				#for c in tree.query(t,len(candi[0])):
+					#print(c)
+					support[candi.index(c)]+=1
+		f=[]
+		for index,s in enumerate(support):
+			if s/self.trans_count>=0.144:
+				f.append(candi[index])
+		return f
 
 	def apriori(self):
 		frequent=self.get_frequent_1()
+		print(frequent)
 		#print(frequent)
 		while frequent:
 			candidate=self.get_candidate(frequent)
-			self.support(candidate)
-			break
+			frequent=self.support(candidate)
+			print(frequent)
 if __name__=='__main__':
 	test=FreItemMining()
 	res=test.apriori()
