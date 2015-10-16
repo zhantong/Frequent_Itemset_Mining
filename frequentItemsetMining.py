@@ -21,8 +21,8 @@ class FreItemMining():
 		f1=[]
 		for t in self.trans:
 			for item in t:
-				if item not in f1:
-					f1.append(item)
+				if [item] not in f1:
+					f1.append([item])
 			if len(f1)==self.item_count:
 				break
 		return sorted(f1)
@@ -30,18 +30,25 @@ class FreItemMining():
 	def get_candidate(self,freq):
 		candi=[]
 		length=len(freq[0])-1
-		for index in len(freq)-1:
-			if freq[index][0:length]==freq[index+1][0:length]:
-				new=freq[index][0:length]
-				if freq[index][length]<freq[index+1][length]:
-					new.extend([freq[index][length],freq[index+1][length]])
+		for first in range(len(freq)-1):
+			for second in range(first+1,len(freq)):
+				if freq[first][0:length]==freq[second][0:length]:
+					new=freq[first][0:length]
+					if freq[first][length]<freq[second][length]:
+						new.extend([freq[first][length],freq[second][length]])
+					else:
+						new.extend([freq[second][length],freq[first][length]])
+					candi.append(new)
 				else:
-					new.extend([freq[index+1][length],freq[index][length]])
-				candi.append(new)
+					break
 		return candi
 
-
+	def apriori(self):
+		frequent=self.get_frequent_1()
+		while frequent:
+			candidate=self.get_candidate(frequent)
+			print(candidate)
 if __name__=='__main__':
 	test=FreItemMining()
-	res=test.get_frequent_1()
+	res=test.apriori()
 	print(res)
