@@ -1,30 +1,36 @@
+MINSUP=0.144
 class FreItemMining():
 	def __init__(self):
 		self.item_count=None
 		self.trans=[]
+		self.trans_count=0
 		self.get_trans()
 	def get_trans(self):
 		with open('assignment2-data.txt','r') as f:
-			val=[int(x) for x in f.readline().split()]
-			self.item_count=len(val)
+			self.items=[int(x) for x in f.readline().split()]
+			self.item_count=len(self.items)
 			for line in f:
+				self.trans_count+=1
 				t=[]
 				for index,item in enumerate(line.split()):
 					if item=='1':
-						t.append(val[index])
+						t.append(self.items[index])
 				if t:
 					self.trans.append(t)
-				#print(trans)
+				#print(self.trans)
 		#print(len(self.trans))
 		return self.trans
 	def get_frequent_1(self):
-		f1=[]
+		c1={}
+		for item in self.items:
+			c1[item]=0
 		for t in self.trans:
 			for item in t:
-				if [item] not in f1:
-					f1.append([item])
-			if len(f1)==self.item_count:
-				break
+				c1[item]+=1
+		f1=[]
+		for item in c1:
+			if c1[item]/self.trans_count>=0.144:
+				f1.append([item])
 		return sorted(f1)
 
 	def get_candidate(self,freq):
@@ -42,9 +48,11 @@ class FreItemMining():
 				else:
 					break
 		return candi
-
+	def prune(self):
+		pass
 	def apriori(self):
 		frequent=self.get_frequent_1()
+		#print(frequent)
 		while frequent:
 			candidate=self.get_candidate(frequent)
 			print(candidate)
