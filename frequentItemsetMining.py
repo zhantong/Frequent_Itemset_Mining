@@ -20,14 +20,40 @@ class Node():
 			else:
 				self.data.append(t)
 				self.isleaf=False
-				print(self.isleaf,self.level,self.children,self.data,t)
+				#print(self.isleaf,self.level,self.children,self.data,t)
 				for t in self.data:
 					mod=t[self.level]%DIGREE
 					if not self.children[mod]:
 						self.children[mod]=Node(self.level+1)
 					self.children[mod].add(t)
 				self.data=[]
-
+	def query(self,t,width,part=[]):
+		result=[]
+		if self.isleaf:
+			for data in self.data:
+#				print(part,t,data)
+#				flag=1
+#				if data[:self.level]==part:
+#					for item in data[self.level:]:
+#						if item not in t:
+#							flag=0
+#					if flag:
+#						result.append(data)
+				flag=1
+				for item in data:
+					if item not in t:
+						flag=0
+				if flag:
+					result.append(data)
+		else:
+			for index in range(len(t)-width+1):
+				mod=t[index]%DIGREE
+				if self.children[mod]:
+#					temp=part
+#					temp.append(t[0])
+#					result.extend(self.children[mod].query(t[1:],width,temp))
+					result.extend(self.children[mod].query(t,width,part))
+		return result
 class Tree():
 	def __init__(self):
 		self.head=Node()
@@ -88,6 +114,13 @@ class FreItemMining():
 		tree=Node(0)
 		for c in candi:
 			tree.add(c)
+		support=[0]*len(candi)
+		for t in self.trans:
+			for c in tree.query(t,len(candi[0])):
+				#print(c)
+				support[candi.index(c)]+=1
+		print(support)
+
 	def apriori(self):
 		frequent=self.get_frequent_1()
 		#print(frequent)
@@ -98,4 +131,4 @@ class FreItemMining():
 if __name__=='__main__':
 	test=FreItemMining()
 	res=test.apriori()
-	print(res)
+	#print(res)
