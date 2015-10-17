@@ -110,8 +110,18 @@ class FreItemMining():
 				else:
 					break
 		return candi
-	def prune(self):
-		pass
+	def prune(self,candi,freq):
+		#print('candi:',candi,'\nfreq:',freq)
+		for c in candi:
+			for i in range(len(c)):
+				temp=c[:i]+c[i+1:]
+				#print(c,temp)
+				if temp:
+					if temp not in freq:
+						#print('remove',c)
+						candi.remove(c)
+						break
+		return candi
 	def support(self,candi):
 		if not candi:
 			return
@@ -141,6 +151,7 @@ class FreItemMining():
 		#print(frequent)
 		while frequent:
 			candidate=self.get_candidate(frequent)
+			candidate=self.prune(candidate,frequent)
 			frequent=self.support(candidate)
 			print(frequent)
 if __name__=='__main__':
