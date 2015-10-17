@@ -222,6 +222,7 @@ class FreItemMining():
         with open(file_name, 'w') as f:
             for res, support in sorted(self.result):
                 for item in res:
+                    item += 1  # 修正item值
                     f.write('%i ' % item)
                 f.write('%.3f\n' % support)
         print('write the result to %s success.' % file_name)
