@@ -17,7 +17,6 @@ class Node():
 			else:
 				self.data.append(t)
 				self.isleaf=False
-				#print(self.isleaf,self.level,self.children,self.data,t)
 				for t in self.data:
 					self.add_to_children(t)
 				self.data=[]
@@ -27,7 +26,6 @@ class Node():
 			self.children[mod]=Node(self.level+1)
 		self.children[mod].add(t)
 	def p(self):
-		#print(self.isleaf,self.level,self.data)
 		for c in self.children:
 			if c:
 				c.p()
@@ -49,13 +47,10 @@ class Node():
 					break
 		else:
 			for index in range(len(t)+len(part)-width+1):
-				#temp=copy.deepcopy(part)
 				temp=part[:]
-				#print(index,t,part)
 				temp.append(t[index])
 				mod=t[index]%DIGREE
 				if self.children[mod]:
-					#print(t[index+1:],width,temp)
 					result.extend(self.children[mod].query(t[index+1:],width,temp))
 		return result
 
@@ -65,6 +60,7 @@ class FreItemMining():
 		self.trans=[]
 		self.trans_count=0
 		self.get_trans()
+		self.result=[]
 	def get_trans(self):
 		with open('assignment2-data.txt','r') as f:
 			self.items=[int(x)-1 for x in f.readline().split()]
@@ -77,8 +73,6 @@ class FreItemMining():
 						t.append(self.items[index])
 				if t:
 					self.trans.append(t)
-				#print(self.trans)
-		#print(len(self.trans))
 		return self.trans
 	def get_frequent_1(self):
 		c1={}
@@ -89,8 +83,10 @@ class FreItemMining():
 				c1[item]+=1
 		f1=[]
 		for item in c1:
-			if c1[item]/self.trans_count>=0.144:
+			support=c1[item]/self.trans_count
+			if support>=0.144:
 				f1.append([item])
+				self.result.append(([item],support))
 		return sorted(f1)
 
 	def get_candidate(self,freq):
@@ -111,50 +107,51 @@ class FreItemMining():
 					break
 		return candi
 	def prune(self,candi,freq):
-		#print('candi:',candi,'\nfreq:',freq)
 		for c in candi:
 			for i in range(len(c)):
 				temp=c[:i]+c[i+1:]
-				#print(c,temp)
 				if temp:
 					if temp not in freq:
-						#print('remove',c)
 						candi.remove(c)
 						break
 		return candi
 	def support(self,candi):
 		if not candi:
 			return
-		#print(candi)
 		tree=Node(0)
 		for c in candi:
 			tree.add(c)
 		tree.p()
-		support=[0]*len(candi)
+		counts=[0]*len(candi)
 		for t in self.trans:
 			if len(t)>=len(candi[0]):
 				res=tree.query(t,len(candi[0]))
-				#print('----',t,res)
 				for c in res:
-				#for c in tree.query(t,len(candi[0])):
-					#print(c)
-					support[candi.index(c)]+=1
+					counts[candi.index(c)]+=1
 		f=[]
-		for index,s in enumerate(support):
-			if s/self.trans_count>=0.144:
+		for index,count in enumerate(counts):
+			support=count/self.trans_count
+			if support>=0.144:
 				f.append(candi[index])
+				self.result.append((candi[index],support))
 		return f
+	def write_out_result(self):
+		file_name='result.txt'
+		with open(file_name,'w') as f:
+			for res,support in sorted(self.result):
+				for item in res:
+					f.write('%i '%item)
+				f.write('%.3f\n'%support)
+		print('write the result to %s success.'%file_name)
 
 	def apriori(self):
 		frequent=self.get_frequent_1()
-		print(frequent)
 		#print(frequent)
 		while frequent:
 			candidate=self.get_candidate(frequent)
 			candidate=self.prune(candidate,frequent)
 			frequent=self.support(candidate)
-			print(frequent)
+		self.write_out_result()
 if __name__=='__main__':
 	test=FreItemMining()
 	res=test.apriori()
-	#print(res)
