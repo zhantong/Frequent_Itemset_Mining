@@ -1,17 +1,16 @@
-MINSUP=0.144
-DIGREE=4
-MAX_LEAF=6
 class Node():
 	def __init__(self,level):
+		Node.digree=4
+		Node.max_leaf=6
 		self.isleaf=True
 		self.level=level
-		self.children=[None]*DIGREE
+		self.children=[None]*Node.digree
 		self.data=[]
 	def add(self,t):
 		if not self.isleaf:
 			self.add_to_children(t)
 		else:
-			if len(self.data)!=MAX_LEAF:
+			if len(self.data)!=Node.max_leaf:
 				self.data.append(t)
 				self.data.sort()
 			else:
@@ -21,14 +20,10 @@ class Node():
 					self.add_to_children(t)
 				self.data=[]
 	def add_to_children(self,t):
-		mod=t[self.level]%DIGREE
+		mod=t[self.level]%Node.digree
 		if not self.children[mod]:
 			self.children[mod]=Node(self.level+1)
 		self.children[mod].add(t)
-	def p(self):
-		for c in self.children:
-			if c:
-				c.p()
 
 	def query(self,t,width,part=[]):
 		result=[]
@@ -49,20 +44,22 @@ class Node():
 			for index in range(len(t)+len(part)-width+1):
 				temp=part[:]
 				temp.append(t[index])
-				mod=t[index]%DIGREE
+				mod=t[index]%Node.digree
 				if self.children[mod]:
 					result.extend(self.children[mod].query(t[index+1:],width,temp))
 		return result
 
 class FreItemMining():
-	def __init__(self):
-		self.item_count=None
+	def __init__(self,minsup):
+		self.minsup=minsup
+		self.item_count=0
 		self.trans=[]
 		self.trans_count=0
 		self.get_trans()
 		self.result=[]
 	def get_trans(self):
-		with open('assignment2-data.txt','r') as f:
+		file_name='assignment2-data.txt'
+		with open(file_name,'r') as f:
 			self.items=[int(x)-1 for x in f.readline().split()]
 			self.item_count=len(self.items)
 			for line in f:
@@ -84,7 +81,7 @@ class FreItemMining():
 		f1=[]
 		for item in c1:
 			support=c1[item]/self.trans_count
-			if support>=0.144:
+			if support>=self.minsup:
 				f1.append([item])
 				self.result.append(([item],support))
 		return sorted(f1)
@@ -121,7 +118,6 @@ class FreItemMining():
 		tree=Node(0)
 		for c in candi:
 			tree.add(c)
-		tree.p()
 		counts=[0]*len(candi)
 		for t in self.trans:
 			if len(t)>=len(candi[0]):
@@ -131,7 +127,7 @@ class FreItemMining():
 		f=[]
 		for index,count in enumerate(counts):
 			support=count/self.trans_count
-			if support>=0.144:
+			if support>=self.minsup:
 				f.append(candi[index])
 				self.result.append((candi[index],support))
 		return f
@@ -146,12 +142,11 @@ class FreItemMining():
 
 	def apriori(self):
 		frequent=self.get_frequent_1()
-		#print(frequent)
 		while frequent:
 			candidate=self.get_candidate(frequent)
 			candidate=self.prune(candidate,frequent)
 			frequent=self.support(candidate)
 		self.write_out_result()
 if __name__=='__main__':
-	test=FreItemMining()
-	res=test.apriori()
+	mining=FreItemMining(minsup=0.144)
+	mining.apriori()
